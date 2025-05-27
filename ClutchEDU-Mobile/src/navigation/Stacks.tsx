@@ -1,20 +1,53 @@
 // src/navigation/Stacks.tsx
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React from 'react';
+
 import ChatScreen from '../screens/ChatScreen';
 import FilterScreen from '../screens/FilterScreen';
 import MatchesScreen from '../screens/MatchesScreen';
 import SwipeScreen from '../screens/SwipeScreen';
 
-const Stack = createNativeStackNavigator();
+export type RootStackParamList = {
+  Filter: undefined;
+  Swipe: {
+    radiusKm: number;
+    course: string;
+    scholarship: boolean;
+  };
+  Matches: undefined;
+  Chat: {
+    matchId: number;
+    collegeName: string;
+  };
+};
+
+const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function StackNavigator() {
   return (
-    <Stack.Navigator initialRouteName="Filter" screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="Filter"  component={FilterScreen} />
-      <Stack.Screen name="Swipe"   component={SwipeScreen} />
-      <Stack.Screen name="Matches" component={MatchesScreen} />
-      <Stack.Screen name="Chat"    component={ChatScreen} />
+    <Stack.Navigator initialRouteName="Swipe"
+      screenOptions={{ headerShown: true }}
+    >
+      <Stack.Screen
+        name="Filter"
+        component={FilterScreen}
+        options={{ title: 'Filtros' }}
+      />
+      <Stack.Screen
+        name="Swipe"
+        component={SwipeScreen}
+        options={{ title: 'Swipe Colleges' }}
+      />
+      <Stack.Screen
+        name="Matches"
+        component={MatchesScreen}
+        options={{ title: 'Matches' }}
+      />
+      <Stack.Screen
+        name="Chat"
+        component={ChatScreen}
+        options={({ route }) => ({ title: route.params.collegeName })}
+      />
     </Stack.Navigator>
   );
 }
