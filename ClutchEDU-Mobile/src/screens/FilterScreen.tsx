@@ -1,70 +1,80 @@
-// src/screens/FilterScreen.tsx
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useState } from 'react';
-import {
-    Button,
-    StyleSheet,
-    Switch,
-    Text,
-    TextInput,
-    View,
-} from 'react-native';
-import { RootStackParamList } from '../navigation/Stacks';
+// src/navigation/Stacks.tsx
+import Ionicons from '@expo/vector-icons/Ionicons';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import React from 'react';
+import { TouchableOpacity } from 'react-native';
 
-type Props = NativeStackScreenProps<RootStackParamList, 'Filter'>;
+import ChatScreen from '../screens/ChatScreen';
+import FilterScreen from '../screens/FilterScreen';
+import MatchesScreen from '../screens/MatchesScreen';
+import SwipeScreen from '../screens/SwipeScreen';
 
-export default function FilterScreen({ navigation }: Props) {
-  const [radiusKm, setRadiusKm] = useState(10);
-  const [course, setCourse] = useState('');
-  const [scholarship, setScholarship] = useState(false);
+export type RootStackParamList = {
+  Filter: undefined;
+  Swipe: {
+    radiusKm: number;
+    course: string;
+    scholarship: boolean;
+    region?: string;
+    state?: string;
+  };
+  Matches: undefined;
+  Chat: {
+    matchId: number;
+    collegeName: string;
+  };
+};
 
+const Stack = createNativeStackNavigator<RootStackParamList>();
+
+export default function StackNavigator() {
   return (
-    <View style={styles.container}>
-      <Text style={styles.label}>Raio (km):</Text>
-      <TextInput
-        style={styles.input}
-        keyboardType="number-pad"
-        value={String(radiusKm)}
-        onChangeText={t => setRadiusKm(+t)}
+    <Stack.Navigator
+      initialRouteName="Swipe"
+      screenOptions={{
+        headerStyle: { backgroundColor: '#1c1c1e' },
+        headerTintColor: '#fff',
+      }}
+    >
+      {/* Tela de filtros */}
+      <Stack.Screen
+        name="Filter"
+        component={FilterScreen}
+        options={{ title: 'Filtros' }}
       />
 
-      <Text style={styles.label}>Curso:</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="e.g. Computer Science"
-        value={course}
-        onChangeText={setCourse}
+      {/* Tela principal de swipe */}
+      <Stack.Screen
+        name="Swipe"
+        component={SwipeScreen}
+        options={({ navigation }) => ({
+          title: 'Discover',
+          headerRight: () => (
+            <TouchableOpacity
+              onPress={() => navigation.navigate('Filter')}
+              style={{ marginRight: 16 }}
+            >
+              <Ionicons name="filter-outline" size={24} color="#fff" />
+            </TouchableOpacity>
+          ),
+        })}
       />
 
-      <View style={styles.row}>
-        <Text style={styles.label}>Só com scholarship?</Text>
-        <Switch value={scholarship} onValueChange={setScholarship} />
-      </View>
-
-      <Button
-        title="Começar Swipe"
-        onPress={() =>
-          navigation.replace('Swipe', { radiusKm, course, scholarship })
-        }
+      {/* Lista de matches */}
+      <Stack.Screen
+        name="Matches"
+        component={MatchesScreen}
+        options={{ title: 'Matches' }}
       />
-    </View>
+
+      {/* Chat */}
+      <Stack.Screen
+        name="Chat"
+        component={ChatScreen}
+        options={({ route }) => ({
+          title: route.params.collegeName,
+        })}
+      />
+    </Stack.Navigator>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, backgroundColor: '#fff' },
-  label: { fontSize: 16, marginBottom: 8 },
-  input: {
-    borderColor: '#ccc',
-    borderWidth: 1,
-    padding: 8,
-    borderRadius: 4,
-    marginBottom: 16,
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 24,
-    justifyContent: 'space-between',
-  },
-});

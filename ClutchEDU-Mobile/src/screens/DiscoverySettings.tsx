@@ -1,97 +1,164 @@
-// src/screens/DiscoverySettingsScreen.tsx
-import Ionicons from '@expo/vector-icons/Ionicons';
-import Slider from '@react-native-community/slider';
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import * as Location from 'expo-location';
+// src/screens/DiscoverySettings.tsx
 import React, { useEffect, useState } from 'react';
 import {
+  Modal,
+  ScrollView,
   StyleSheet,
-  Switch,
   Text,
   TouchableOpacity,
   View
 } from 'react-native';
-import { RootStackParamList } from '../navigation/Stacks';
+import { regionMapping } from '../utils/regions';
 
-type Props = NativeStackScreenProps<RootStackParamList, 'DiscoverySettings'>;
+type Props = {
+  visible: boolean;
+  initialRegion: string | null;
+  initialState: string | null;
+  onApply: (region: string | null, state: string | null) => void;
+  onClose: () => void;
+};
 
-export default function DiscoverySettingsScreen({ navigation, route }: Props) {
-  const [locationDesc, setLocationDesc] = useState('Buscando localização...');
-  const [coords, setCoords] = useState<{ latitude: number; longitude: number } | null>(null);
-  const [radiusKm, setRadiusKm] = useState(10);
-  const [extendAfter, setExtendAfter] = useState(true);
+export default function DiscoverySettings({
+  visible,
+  initialRegion,
+  initialState,
+  onApply,
+  onClose
+}: Props) {
+  const [region, setRegion] = useState<string | null>(initialRegion);
+  const [state, setState]   = useState<string | null>(initialState);
 
   useEffect(() => {
-    (async () => {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        setLocationDesc('Permissão negada');
-        return;
-      }
-      const pos = await Location.getCurrentPositionAsync({});
-      setCoords(pos.coords);
-      setLocationDesc(`${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}`);
-    })();
-  }, []);
+    if (visible) {
+      setRegion(initialRegion);
+      setState(initialState);
+    }
+  }, [visible, initialRegion, initialState]);
 
-  function onDone() {
-    navigation.replace('Swipe', {
-      radiusKm,
-      course: '',
-      scholarship: false,
-    });
-  }
+  const regions      = Object.keys(regionMapping);
+  const statesForReg = region ? regionMapping[region] : [];
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons name="close" size={28} color="#000"/>
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Discovery Settings</Text>
-        <TouchableOpacity onPress={onDone}>
-          <Text style={styles.done}>Done</Text>
-        </TouchableOpacity>
-      </View>
+    <Modal
+      visible={visible}
+      animationType="fade"
+      transparent
+      onRequestClose={onClose}
+    >
+      <View style={styles.backdrop}>
+        <View style={styles.modal}>
+          {/* Header */}
+          <View style={styles.header}>
+            <TouchableOpacity onPress={onClose}>
+              <Text style={styles.close}>Close</Text>
+            </TouchableOpacity>
+            <Text style={styles.title}>Discovery Settings</Text>
+            <TouchableOpacity onPress={() => onApply(region, state)}>
+              <Text style={styles.apply}>Apply</Text>
+            </TouchableOpacity>
+          </View>
 
-      <View style={styles.row}>
-        <Text style={styles.label}>Location</Text>
-        <Text style={styles.value}>{locationDesc}</Text>
-      </View>
+          {/* Body */}
+          <ScrollView contentContainerStyle={styles.body}>
+            {/* Region */}
+            <Text style={styles.label}>Search by Region</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              {regions.map(r => (
+                <TouchableOpacity
+                  key={r}
+                  style={[styles.pill, region === r && styles.pillSelected]}
+                  onPress={() => {
+                    setRegion(r);
+                    setState(null);
+                  }}
+                >
+                  <Text
+                    style={[
+                      styles.pillText,
+                      region === r && styles.pillTextSelected
+                    ]}
+                  >
+                    {r}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
 
-      <View style={styles.row}>
-        <Text style={styles.label}>Maximum Distance</Text>
-        <Text style={styles.value}>{radiusKm} km</Text>
+            {/* State */}
+            {region && (
+              <>
+                <Text style={[styles.label, { marginTop: 20 }]}>
+                  Search by State
+                </Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                  {statesForReg.map(s => (
+                    <TouchableOpacity
+                      key={s}
+                      style={[styles.pill, state === s && styles.pillSelected]}
+                      onPress={() => setState(s)}
+                    >
+                      <Text
+                        style={[
+                          styles.pillText,
+                          state === s && styles.pillTextSelected
+                        ]}
+                      >
+                        {s}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </>
+            )}
+          </ScrollView>
+        </View>
       </View>
-      <Slider
-        style={{ width: '100%', height: 40 }}
-        minimumValue={1}
-        maximumValue={500}
-        step={1}
-        value={radiusKm}
-        onValueChange={setRadiusKm}
-      />
-
-      <View style={[styles.row, { marginTop: 20 }]}>
-        <Text style={styles.label}>Extend after exhaustion</Text>
-        <Switch
-          value={extendAfter}
-          onValueChange={setExtendAfter}
-        />
-      </View>
-    </View>
+    </Modal>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex:1, padding: 16, backgroundColor: '#fff' },
-  header: {
-    flexDirection:'row', justifyContent:'space-between',
-    alignItems:'center', marginBottom: 24
+  backdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  headerTitle: { fontSize: 18, fontWeight: 'bold' },
-  done: { color: '#007AFF', fontSize: 16 },
-  row: { marginBottom: 16 },
-  label: { fontSize: 16, fontWeight: '600' },
-  value: { fontSize: 14, color: '#666', marginTop: 4 },
+  modal: {
+    width: '90%',
+    maxHeight: '80%',
+    backgroundColor: '#1c1c1e',
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 16,
+  },
+  close: { color: '#888', fontSize: 16 },
+  title: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
+  apply: { color: '#0af', fontSize: 16 },
+
+  body: { padding: 16 },
+  label: { color: '#ccc', fontSize: 14, marginBottom: 8 },
+
+  pill: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    backgroundColor: '#333',
+    borderRadius: 20,
+    marginRight: 8,
+  },
+  pillSelected: {
+    backgroundColor: '#6A0DAD',
+  },
+  pillText: {
+    color: '#fff',
+    fontSize: 14,
+  },
+  pillTextSelected: {
+    fontWeight: 'bold',
+  },
 });

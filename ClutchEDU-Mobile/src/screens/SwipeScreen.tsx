@@ -11,6 +11,7 @@ import {
   Dimensions,
   ImageBackground,
   PanResponder,
+  SafeAreaView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -18,10 +19,10 @@ import {
 } from 'react-native';
 import collegesData from '../data/colleges.json';
 import { RootStackParamList } from '../navigation/Stacks';
-import { haversineDistance } from '../utils/distance';
-
-// ← import your generated logo map and sanitizer
+import DiscoverySettingsModal from '../screens/DiscoverySettings';
 import { collegeLogos, defaultLogo, sanitize } from '../utils/collegeLogos';
+import { haversineDistance } from '../utils/distance';
+import { locationMatchesState, regionMapping } from '../utils/regions';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Swipe'>;
 const { width, height } = Dimensions.get('window');
@@ -36,13 +37,21 @@ interface CollegeCard {
 
 export default function SwipeScreen({ route, navigation }: Props) {
   const initialRadius = route.params.radiusKm;
+
   const [loading, setLoading] = useState(true);
   const [cards, setCards] = useState<CollegeCard[]>([]);
   const [extended, setExtended] = useState(false);
   const [index, setIndex] = useState(0);
-  const position = useRef(new Animated.ValueXY()).current;
+  const [userCoords, setUserCoords] = useState<{ latitude: number; longitude: number } | null>(null);
 
-  // PanResponder for swipe gestures
+  // filtro
+  const [filterRadius, setFilterRadius] = useState(initialRadius);
+  const [filterRegion, setFilterRegion] = useState<string | null>(null);
+  const [filterState, setFilterState] = useState<string | null>(null);
+  const [showFilter, setShowFilter] = useState(false);
+
+  // swipe gesture
+  const position = useRef(new Animated.ValueXY()).current;
   const panResponder = useRef(
     PanResponder.create({
       onMoveShouldSetPanResponder: (_, g) => Math.abs(g.dx) > 10,
@@ -51,15 +60,10 @@ export default function SwipeScreen({ route, navigation }: Props) {
         { useNativeDriver: false }
       ),
       onPanResponderRelease: (_, g) => {
-        const threshold = width * 0.25;
-        if (g.dx > threshold) swipe('right');
-        else if (g.dx < -threshold) swipe('left');
-        else {
-          Animated.spring(position, {
-            toValue: { x: 0, y: 0 },
-            useNativeDriver: false,
-          }).start();
-        }
+        const thr = width * 0.25;
+        if (g.dx > thr) swipe('right');
+        else if (g.dx < -thr) swipe('left');
+        else Animated.spring(position, { toValue: { x: 0, y: 0 }, useNativeDriver: false }).start();
       },
     })
   ).current;
@@ -72,30 +76,46 @@ export default function SwipeScreen({ route, navigation }: Props) {
         setLoading(false);
         return;
       }
-      const { coords } = await Location.getCurrentPositionAsync({});
-      loadCards(coords.latitude, coords.longitude, initialRadius);
+      const { coords } = await Location.getCurrentPositionAsync();
+      setUserCoords(coords);
+      loadCards(coords.latitude, coords.longitude, filterRadius, false, filterRegion, filterState);
       setLoading(false);
     })();
   }, []);
 
-  function loadCards(lat: number, lng: number, radius: number) {
+  function loadCards(
+    lat: number,
+    lng: number,
+    radius: number,
+    isExtended: boolean,
+    region: string | null,
+    state: string | null
+  ) {
     const mapped = (collegesData as any[]).map(c => ({
       id: +c.id,
       name: c.colleges as string,
       city: c.city as string,
       state: c.state as string,
-      distance: haversineDistance(
-        lat,
-        lng,
-        parseFloat(c.lat),
-        parseFloat(c.lng)
-      ),
+      distance: haversineDistance(lat, lng, parseFloat(c.lat), parseFloat(c.lng)),
     }));
-    const filtered = mapped
-      .filter(c => c.distance <= radius)
-      .sort((a, b) => a.distance - b.distance);
+
+    let filtered = mapped.filter(c => c.distance <= radius);
+
+    // filtra região
+    if (region) {
+      const allowed = regionMapping[region];
+      filtered = filtered.filter(c => allowed.some(st => locationMatchesState(c.state, st)));
+    }
+
+    // filtra estado
+    if (state) {
+      filtered = filtered.filter(c => locationMatchesState(c.state, state));
+    }
+
+    filtered.sort((a, b) => a.distance - b.distance);
     setCards(filtered);
     setIndex(0);
+    setExtended(isExtended);
   }
 
   function swipe(dir: 'left' | 'right') {
@@ -106,86 +126,78 @@ export default function SwipeScreen({ route, navigation }: Props) {
       useNativeDriver: false,
     }).start(() => {
       position.setValue({ x: 0, y: 0 });
-      const next = index + 1;
-      if (next >= cards.length) {
-        if (!extended) {
-          setExtended(true);
-          Location.getCurrentPositionAsync({}).then(pos =>
-            loadCards(pos.coords.latitude, pos.coords.longitude, 99999)
-          );
+      const nxt = index + 1;
+      if (nxt >= cards.length) {
+        if (!extended && userCoords) {
+          loadCards(userCoords.latitude, userCoords.longitude, 99999, true, filterRegion, filterState);
         } else {
           navigation.replace('Matches');
           return;
         }
       }
-      setIndex(next);
+      setIndex(nxt);
     });
+  }
+
+  function handleApply(radius: number, region: string | null, state: string | null) {
+    setFilterRadius(radius);
+    setFilterRegion(region);
+    setFilterState(state);
+    if (userCoords) {
+      loadCards(userCoords.latitude, userCoords.longitude, radius, false, region, state);
+    }
+    setShowFilter(false);
   }
 
   if (loading) {
     return (
       <View style={styles.loader}>
-        <ActivityIndicator size="large" />
+        <ActivityIndicator size="large" color="#fff" />
       </View>
     );
   }
-
   const card = cards[index];
   if (!card) {
     return (
       <View style={styles.loader}>
-        <Text>Nenhuma faculdade restante.</Text>
+        <Text style={styles.emptyText}>Nenhuma faculdade restante.</Text>
       </View>
     );
   }
 
-  // lookup logo from static map
   const key = sanitize(card.name);
   const logoSource = collegeLogos[key] ?? defaultLogo;
 
   return (
     <View style={styles.container}>
-      {/* HEADER */}
-      <View style={styles.header}>
-        <ImageBackground
-          source={require('../../assets/images/logo.png')}
-          style={styles.logo}
-          resizeMode="contain"
-        />
+      <SafeAreaView style={styles.header}>
+        <ImageBackground source={require('../../assets/images/logo.png')} style={styles.logo} resizeMode="contain" />
         <View style={styles.headerIcons}>
-          <TouchableOpacity onPress={() => navigation.navigate('DiscoverySettings')}>
-            <Ionicons name="filter-outline" size={28} color="#000" />
+          <TouchableOpacity onPress={() => setShowFilter(true)}>
+            <Ionicons name="filter-outline" size={28} color="#fff" />
           </TouchableOpacity>
           <TouchableOpacity style={{ marginLeft: 16 }}>
-            <MaterialCommunityIcons name="lightning-bolt-outline" size={28} color="#000" />
+            <MaterialCommunityIcons name="lightning-bolt-outline" size={28} color="#fff" />
           </TouchableOpacity>
         </View>
-      </View>
+      </SafeAreaView>
 
-      {/* CARD */}
       <View style={styles.cardContainer}>
-        <Animated.View
-          {...panResponder.panHandlers}
-          style={[position.getLayout(), styles.card]}
-        >
+        <Animated.View {...panResponder.panHandlers} style={[position.getLayout(), styles.card]}>
           <ImageBackground source={logoSource} style={styles.card}>
+            <View style={styles.bottomOverlay} />
             <View style={styles.badge}>
               <Text style={styles.badgeText}>Nearby</Text>
             </View>
             <View style={styles.cardFooter}>
               <Text style={styles.cardTitle}>{card.name}</Text>
-              <Text style={styles.cardSubtitle}>
-                {card.city}, {card.state}
-              </Text>
-              <Text style={styles.cardDistance}>
-                {Math.round(card.distance)} km away
-              </Text>
+              <Text style={styles.cardSubtitle}>{card.city}, {card.state}</Text>
+              <Text style={styles.cardDistance}>{Math.round(card.distance)} km away</Text>
             </View>
           </ImageBackground>
         </Animated.View>
       </View>
 
-      {/* ACTION BUTTONS */}
       <View style={styles.buttons}>
         <TouchableOpacity onPress={() => swipe('left')}>
           <Ionicons name="close-circle" size={48} color="#F06A6A" />
@@ -194,63 +206,51 @@ export default function SwipeScreen({ route, navigation }: Props) {
           <Ionicons name="heart-circle" size={48} color="#6A0DAD" />
         </TouchableOpacity>
       </View>
+
+    <DiscoverySettingsModal
+      visible={showFilter}
+      initialRegion={filterRegion}
+      initialState={filterState}
+      onApply={(region, state) => {
+        setFilterRegion(region);
+        setFilterState(state);
+        if (userCoords) {
+          loadCards(
+            userCoords.latitude,
+            userCoords.longitude,
+            filterRadius,      // you can keep your default radius logic or hardcode
+            false,
+            region,
+            state
+          );
+        }
+        setShowFilter(false);
+      }}
+      onClose={() => setShowFilter(false)}
+    />
+
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container:        { flex: 1, backgroundColor: '#121212' },
-  loader:           { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  container: { flex: 1, backgroundColor: '#000' },
+  loader: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#000' },
+  emptyText: { color: '#fff', fontSize: 16 },
 
-  header:           {
-    height: 60,
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    justifyContent: 'space-between',
-    marginTop: 16,
-  },
-  logo:             { width: 100, height: 40 },
-  headerIcons:      { flexDirection: 'row' },
+  header: { backgroundColor: '#1c1c1e', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 12 },
+  logo: { width: 120, height: 40 },
+  headerIcons: { flexDirection: 'row', paddingRight: 12 },
 
-  cardContainer:    {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  card:             {
-    width: width * 0.9,
-    height: height * 0.7,
-    borderRadius: 16,
-    overflow: 'hidden',
-    backgroundColor: '#222',          // dark base
-  },
-  badge:            {
-    position: 'absolute',
-    top: 16,
-    left: 16,
-    backgroundColor: 'rgba(255,255,255,0.2)', // light translucent
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
-  },
-  badgeText:        { color: '#fff', fontSize: 12 },
+  cardContainer: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  card: { width: width * 0.9, height: height * 0.7, borderRadius: 16, overflow: 'hidden', backgroundColor: '#1c1c1e' },
+  bottomOverlay: { position: 'absolute', left: 0, right: 0, bottom: 0, height: 120, backgroundColor: 'rgba(0,0,0,0.6)' },
+  badge: { position: 'absolute', top: 16, left: 16, backgroundColor: 'rgba(0,0,0,0.5)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 4, zIndex: 2 },
+  badgeText: { color: '#fff', fontSize: 12 },
+  cardFooter: { position: 'absolute', bottom: 24, left: 16, right: 16, zIndex: 2 },
+  cardTitle: { fontSize: 28, color: '#fff', fontWeight: 'bold' },
+  cardSubtitle: { fontSize: 18, color: '#fff', marginTop: 4 },
+  cardDistance: { fontSize: 14, color: '#fff', marginTop: 2 },
 
-  cardFooter:       {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    padding: 16,
-    backgroundColor: 'rgba(0,0,0,0.6)', // dark overlay
-  },
-  cardTitle:        { fontSize: 28, color: '#fff', fontWeight: 'bold' },
-  cardSubtitle:     { fontSize: 18, color: '#ddd', marginTop: 4 },
-  cardDistance:     { fontSize: 14, color: '#ccc', marginTop: 2 },
-
-  buttons:          {
-    flexDirection: 'row',
-    justifyContent: 'space-evenly',
-    marginBottom: 32,
-  },
+  buttons: { flexDirection: 'row', justifyContent: 'space-evenly', marginBottom: 32 },
 });
