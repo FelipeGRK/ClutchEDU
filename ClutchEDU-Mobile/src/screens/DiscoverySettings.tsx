@@ -5,11 +5,11 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import * as Location from 'expo-location';
 import React, { useEffect, useState } from 'react';
 import {
-    StyleSheet,
-    Switch,
-    Text,
-    TouchableOpacity,
-    View
+  StyleSheet,
+  Switch,
+  Text,
+  TouchableOpacity,
+  View
 } from 'react-native';
 import { RootStackParamList } from '../navigation/Stacks';
 

@@ -1,3 +1,4 @@
+// src/screens/SwipeScreen.tsx
 import Ionicons from '@expo/vector-icons/Ionicons';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -6,17 +7,21 @@ import React, { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Animated,
   Dimensions,
   ImageBackground,
+  PanResponder,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
-import Swiper from 'react-native-deck-swiper';
 import collegesData from '../data/colleges.json';
 import { RootStackParamList } from '../navigation/Stacks';
 import { haversineDistance } from '../utils/distance';
+
+// ← import your generated logo map and sanitizer
+import { collegeLogos, defaultLogo, sanitize } from '../utils/collegeLogos';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Swipe'>;
 const { width, height } = Dimensions.get('window');
@@ -27,62 +32,94 @@ interface CollegeCard {
   city: string;
   state: string;
   distance: number;
-  imageUri?: string;
 }
 
 export default function SwipeScreen({ route, navigation }: Props) {
-  const { radiusKm: initialRadius } = route.params;
+  const initialRadius = route.params.radiusKm;
   const [loading, setLoading] = useState(true);
   const [cards, setCards] = useState<CollegeCard[]>([]);
-  const [userCoords, setUserCoords] = useState<{ latitude: number; longitude: number }>({ latitude: 0, longitude: 0 });
   const [extended, setExtended] = useState(false);
-  const swiperRef = useRef<Swiper<CollegeCard>>(null);
+  const [index, setIndex] = useState(0);
+  const position = useRef(new Animated.ValueXY()).current;
+
+  // PanResponder for swipe gestures
+  const panResponder = useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: (_, g) => Math.abs(g.dx) > 10,
+      onPanResponderMove: Animated.event(
+        [null, { dx: position.x, dy: position.y }],
+        { useNativeDriver: false }
+      ),
+      onPanResponderRelease: (_, g) => {
+        const threshold = width * 0.25;
+        if (g.dx > threshold) swipe('right');
+        else if (g.dx < -threshold) swipe('left');
+        else {
+          Animated.spring(position, {
+            toValue: { x: 0, y: 0 },
+            useNativeDriver: false,
+          }).start();
+        }
+      },
+    })
+  ).current;
 
   useEffect(() => {
     (async () => {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
-        return Alert.alert('Permissão de localização negada');
+        Alert.alert('Permissão de localização negada');
+        setLoading(false);
+        return;
       }
-      const pos = await Location.getCurrentPositionAsync({});
-      setUserCoords(pos.coords);
-      filterCards(pos.coords, initialRadius);
+      const { coords } = await Location.getCurrentPositionAsync({});
+      loadCards(coords.latitude, coords.longitude, initialRadius);
       setLoading(false);
     })();
   }, []);
 
-  function filterCards(coords: { latitude: number; longitude: number }, radius: number) {
+  function loadCards(lat: number, lng: number, radius: number) {
     const mapped = (collegesData as any[]).map(c => ({
       id: +c.id,
-      name: c.colleges,
-      city: c.city,
-      state: c.state,
+      name: c.colleges as string,
+      city: c.city as string,
+      state: c.state as string,
       distance: haversineDistance(
-        coords.latitude,
-        coords.longitude,
+        lat,
+        lng,
         parseFloat(c.lat),
         parseFloat(c.lng)
       ),
-      imageUri: c.image || undefined,
     }));
     const filtered = mapped
       .filter(c => c.distance <= radius)
       .sort((a, b) => a.distance - b.distance);
     setCards(filtered);
+    setIndex(0);
   }
 
-  function onSwiped(index: number) {
-    // ao swipar a última carta:
-    if (index === cards.length - 1) {
-      if (!extended) {
-        // primeiro exaure o raio inicial, depois estende para TODAS
-        setExtended(true);
-        filterCards(userCoords, 99999);
-        swiperRef.current?.swipeBack(); // reseta para a carta 0
-      } else {
-        navigation.replace('Matches');
+  function swipe(dir: 'left' | 'right') {
+    const toX = dir === 'right' ? width : -width;
+    Animated.timing(position, {
+      toValue: { x: toX, y: 0 },
+      duration: 200,
+      useNativeDriver: false,
+    }).start(() => {
+      position.setValue({ x: 0, y: 0 });
+      const next = index + 1;
+      if (next >= cards.length) {
+        if (!extended) {
+          setExtended(true);
+          Location.getCurrentPositionAsync({}).then(pos =>
+            loadCards(pos.coords.latitude, pos.coords.longitude, 99999)
+          );
+        } else {
+          navigation.replace('Matches');
+          return;
+        }
       }
-    }
+      setIndex(next);
+    });
   }
 
   if (loading) {
@@ -93,18 +130,30 @@ export default function SwipeScreen({ route, navigation }: Props) {
     );
   }
 
+  const card = cards[index];
+  if (!card) {
+    return (
+      <View style={styles.loader}>
+        <Text>Nenhuma faculdade restante.</Text>
+      </View>
+    );
+  }
+
+  // lookup logo from static map
+  const key = sanitize(card.name);
+  const logoSource = collegeLogos[key] ?? defaultLogo;
+
   return (
     <View style={styles.container}>
-
-      {/* ─── CABEÇALHO CUSTOM ─────────────────────────────────── */}
+      {/* HEADER */}
       <View style={styles.header}>
         <ImageBackground
-          source={require('../../assets/tinder-logo.png')}
+          source={require('../../assets/images/logo.png')}
           style={styles.logo}
           resizeMode="contain"
         />
         <View style={styles.headerIcons}>
-          <TouchableOpacity onPress={() => navigation.replace('DiscoverySettings')}>
+          <TouchableOpacity onPress={() => navigation.navigate('DiscoverySettings')}>
             <Ionicons name="filter-outline" size={28} color="#000" />
           </TouchableOpacity>
           <TouchableOpacity style={{ marginLeft: 16 }}>
@@ -113,47 +162,35 @@ export default function SwipeScreen({ route, navigation }: Props) {
         </View>
       </View>
 
-      {/* ─── SWIPER ───────────────────────────────────────────── */}
-      <Swiper
-        ref={swiperRef}
-        cards={cards}
-        verticalSwipe={false}
-        stackSize={3}
-        backgroundColor="#f5f5f5"
-        onSwiped={onSwiped}
-        onSwipedLeft={() => {}}
-        onSwipedRight={() => {}}
-        animateCardOpacity
-        containerStyle={{ flex: 1 }}
-        cardStyle={styles.card}
-        renderCard={(card) =>
-          card ? (
-            <ImageBackground
-              source={card.imageUri ? { uri: card.imageUri } : require('../../assets/college-placeholder.jpg')}
-              style={styles.card}
-            >
-              <View style={styles.badge}>
-                <Text style={styles.badgeText}>Nearby</Text>
-              </View>
-              <View style={styles.cardFooter}>
-                <Text style={styles.cardTitle}>{card.name}</Text>
-                <Text style={styles.cardSubtitle}>{card.city}, {card.state}</Text>
-                <Text style={styles.cardDistance}>{Math.round(card.distance)} km away</Text>
-              </View>
-            </ImageBackground>
-          ) : null
-        }
-      />
+      {/* CARD */}
+      <View style={styles.cardContainer}>
+        <Animated.View
+          {...panResponder.panHandlers}
+          style={[position.getLayout(), styles.card]}
+        >
+          <ImageBackground source={logoSource} style={styles.card}>
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>Nearby</Text>
+            </View>
+            <View style={styles.cardFooter}>
+              <Text style={styles.cardTitle}>{card.name}</Text>
+              <Text style={styles.cardSubtitle}>
+                {card.city}, {card.state}
+              </Text>
+              <Text style={styles.cardDistance}>
+                {Math.round(card.distance)} km away
+              </Text>
+            </View>
+          </ImageBackground>
+        </Animated.View>
+      </View>
 
-      {/* ─── BOTÕES DE AÇÃO ───────────────────────────────────── */}
+      {/* ACTION BUTTONS */}
       <View style={styles.buttons}>
-        <TouchableOpacity onPress={() => swiperRef.current?.swipeBack()}>
-          <Ionicons name="arrow-undo-circle-outline" size={36} color="#F5A623" />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => swiperRef.current?.swipeLeft()}>
+        <TouchableOpacity onPress={() => swipe('left')}>
           <Ionicons name="close-circle" size={48} color="#F06A6A" />
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => swiperRef.current?.swipeRight()}>
+        <TouchableOpacity onPress={() => swipe('right')}>
           <Ionicons name="heart-circle" size={48} color="#6A0DAD" />
         </TouchableOpacity>
       </View>
@@ -162,10 +199,10 @@ export default function SwipeScreen({ route, navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5f5f5' },
-  loader: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  container:        { flex: 1, backgroundColor: '#121212' },
+  loader:           { flex: 1, justifyContent: 'center', alignItems: 'center' },
 
-  header: {
+  header:           {
     height: 60,
     flexDirection: 'row',
     alignItems: 'center',
@@ -173,39 +210,45 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginTop: 16,
   },
-  logo: { width: 100, height: 40 },
-  headerIcons: { flexDirection: 'row' },
+  logo:             { width: 100, height: 40 },
+  headerIcons:      { flexDirection: 'row' },
 
-  card: {
+  cardContainer:    {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  card:             {
     width: width * 0.9,
     height: height * 0.7,
     borderRadius: 16,
     overflow: 'hidden',
-    alignSelf: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: '#222',          // dark base
   },
-  badge: {
+  badge:            {
     position: 'absolute',
     top: 16,
     left: 16,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(255,255,255,0.2)', // light translucent
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 4,
   },
-  badgeText: { color: '#fff', fontSize: 12 },
+  badgeText:        { color: '#fff', fontSize: 12 },
 
-  cardFooter: {
+  cardFooter:       {
     position: 'absolute',
-    bottom: 24,
-    left: 16,
-    right: 16,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: 16,
+    backgroundColor: 'rgba(0,0,0,0.6)', // dark overlay
   },
-  cardTitle: { fontSize: 28, color: '#fff', fontWeight: 'bold' },
-  cardSubtitle: { fontSize: 18, color: '#fff', marginTop: 4 },
-  cardDistance: { fontSize: 14, color: '#fff', marginTop: 2 },
+  cardTitle:        { fontSize: 28, color: '#fff', fontWeight: 'bold' },
+  cardSubtitle:     { fontSize: 18, color: '#ddd', marginTop: 4 },
+  cardDistance:     { fontSize: 14, color: '#ccc', marginTop: 2 },
 
-  buttons: {
+  buttons:          {
     flexDirection: 'row',
     justifyContent: 'space-evenly',
     marginBottom: 32,
