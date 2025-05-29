@@ -44,11 +44,11 @@ export default function SwipeScreen({ route, navigation }: Props) {
   const [index, setIndex] = useState(0);
   const [userCoords, setUserCoords] = useState<{ latitude: number; longitude: number } | null>(null);
 
-  // filtro
+  // filter state
   const [filterRadius, setFilterRadius] = useState(initialRadius);
   const [filterRegion, setFilterRegion] = useState<string | null>(null);
-  const [filterState, setFilterState] = useState<string | null>(null);
-  const [showFilter, setShowFilter] = useState(false);
+  const [filterState, setFilterState]   = useState<string | null>(null);
+  const [showFilter, setShowFilter]     = useState(false);
 
   // swipe gesture
   const position = useRef(new Animated.ValueXY()).current;
@@ -56,14 +56,14 @@ export default function SwipeScreen({ route, navigation }: Props) {
     PanResponder.create({
       onMoveShouldSetPanResponder: (_, g) => Math.abs(g.dx) > 10,
       onPanResponderMove: Animated.event(
-        [null, { dx: position.x, dy: position.y }],
+        [ null, { dx: position.x, dy: position.y } ],
         { useNativeDriver: false }
       ),
       onPanResponderRelease: (_, g) => {
         const thr = width * 0.25;
         if (g.dx > thr) swipe('right');
         else if (g.dx < -thr) swipe('left');
-        else Animated.spring(position, { toValue: { x: 0, y: 0 }, useNativeDriver: false }).start();
+        else Animated.spring(position, { toValue: { x:0,y:0 }, useNativeDriver: false }).start();
       },
     })
   ).current;
@@ -101,32 +101,32 @@ export default function SwipeScreen({ route, navigation }: Props) {
 
     let filtered = mapped.filter(c => c.distance <= radius);
 
-    // filtra região
+    // filter by region
     if (region) {
       const allowed = regionMapping[region];
       filtered = filtered.filter(c => allowed.some(st => locationMatchesState(c.state, st)));
     }
 
-    // filtra estado
+    // filter by state
     if (state) {
       filtered = filtered.filter(c => locationMatchesState(c.state, state));
     }
 
-    filtered.sort((a, b) => a.distance - b.distance);
+    filtered.sort((a,b) => a.distance - b.distance);
     setCards(filtered);
     setIndex(0);
     setExtended(isExtended);
   }
 
-  function swipe(dir: 'left' | 'right') {
-    const toX = dir === 'right' ? width : -width;
+  function swipe(dir: 'left'|'right') {
+    const toX = dir==='right'? width:-width;
     Animated.timing(position, {
-      toValue: { x: toX, y: 0 },
+      toValue: { x: toX, y:0 },
       duration: 200,
-      useNativeDriver: false,
+      useNativeDriver: false
     }).start(() => {
-      position.setValue({ x: 0, y: 0 });
-      const nxt = index + 1;
+      position.setValue({x:0,y:0});
+      const nxt = index+1;
       if (nxt >= cards.length) {
         if (!extended && userCoords) {
           loadCards(userCoords.latitude, userCoords.longitude, 99999, true, filterRegion, filterState);
@@ -137,16 +137,6 @@ export default function SwipeScreen({ route, navigation }: Props) {
       }
       setIndex(nxt);
     });
-  }
-
-  function handleApply(radius: number, region: string | null, state: string | null) {
-    setFilterRadius(radius);
-    setFilterRegion(region);
-    setFilterState(state);
-    if (userCoords) {
-      loadCards(userCoords.latitude, userCoords.longitude, radius, false, region, state);
-    }
-    setShowFilter(false);
   }
 
   if (loading) {
@@ -170,25 +160,32 @@ export default function SwipeScreen({ route, navigation }: Props) {
 
   return (
     <View style={styles.container}>
+      {/* HEADER */}
       <SafeAreaView style={styles.header}>
-        <ImageBackground source={require('../../assets/images/logo.png')} style={styles.logo} resizeMode="contain" />
+        <View style={styles.logoContainer}>
+          <ImageBackground
+            source={require('../../assets/images/logo.png')}
+            style={styles.logo}
+            resizeMode="contain"
+          />
+          <Text style={styles.appName}>ClutchEDU</Text>
+        </View>
         <View style={styles.headerIcons}>
-          <TouchableOpacity onPress={() => setShowFilter(true)}>
+          <TouchableOpacity onPress={()=>setShowFilter(true)}>
             <Ionicons name="filter-outline" size={28} color="#fff" />
           </TouchableOpacity>
-          <TouchableOpacity style={{ marginLeft: 16 }}>
-            <MaterialCommunityIcons name="lightning-bolt-outline" size={28} color="#fff" />
+          <TouchableOpacity style={{marginLeft:16}}>
+            <MaterialCommunityIcons name="lightning-bolt-outline" size={28} color="#fff"/>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
 
+      {/* CARD */}
       <View style={styles.cardContainer}>
         <Animated.View {...panResponder.panHandlers} style={[position.getLayout(), styles.card]}>
           <ImageBackground source={logoSource} style={styles.card}>
-            <View style={styles.bottomOverlay} />
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>Nearby</Text>
-            </View>
+            <View style={styles.bottomOverlay}/>
+            <View style={styles.badge}><Text style={styles.badgeText}>Nearby</Text></View>
             <View style={styles.cardFooter}>
               <Text style={styles.cardTitle}>{card.name}</Text>
               <Text style={styles.cardSubtitle}>{card.city}, {card.state}</Text>
@@ -198,59 +195,85 @@ export default function SwipeScreen({ route, navigation }: Props) {
         </Animated.View>
       </View>
 
+      {/* ACTION BUTTONS */}
       <View style={styles.buttons}>
-        <TouchableOpacity onPress={() => swipe('left')}>
-          <Ionicons name="close-circle" size={48} color="#F06A6A" />
+        <TouchableOpacity onPress={()=>swipe('left')}>
+          <Ionicons name="close-circle" size={48} color="#F06A6A"/>
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => swipe('right')}>
-          <Ionicons name="heart-circle" size={48} color="#6A0DAD" />
+        <TouchableOpacity onPress={()=>swipe('right')}>
+          <Ionicons name="heart-circle" size={48} color="#6A0DAD"/>
         </TouchableOpacity>
       </View>
 
-    <DiscoverySettingsModal
-      visible={showFilter}
-      initialRegion={filterRegion}
-      initialState={filterState}
-      onApply={(region, state) => {
-        setFilterRegion(region);
-        setFilterState(state);
-        if (userCoords) {
-          loadCards(
-            userCoords.latitude,
-            userCoords.longitude,
-            filterRadius,      // you can keep your default radius logic or hardcode
-            false,
-            region,
-            state
-          );
-        }
-        setShowFilter(false);
-      }}
-      onClose={() => setShowFilter(false)}
-    />
-
+      {/* FILTER MODAL */}
+      <DiscoverySettingsModal
+        visible={showFilter}
+        initialRegion={filterRegion}
+        initialState={filterState}
+        onApply={(region, state) => {
+          setFilterRegion(region);
+          setFilterState(state);
+          if (userCoords) {
+            loadCards(
+              userCoords.latitude,
+              userCoords.longitude,
+              filterRadius,
+              false,
+              region,
+              state
+            );
+          }
+          setShowFilter(false);
+        }}
+        onClose={()=>setShowFilter(false)}
+      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#000' },
-  loader: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#000' },
-  emptyText: { color: '#fff', fontSize: 16 },
+  container:    { flex:1, backgroundColor:'#000' },
+  loader:       { flex:1, justifyContent:'center', alignItems:'center', backgroundColor:'#000' },
+  emptyText:    { color:'#fff', fontSize:16 },
 
-  header: { backgroundColor: '#1c1c1e', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 12 },
-  logo: { width: 120, height: 40 },
-  headerIcons: { flexDirection: 'row', paddingRight: 12 },
+  header:       {
+    backgroundColor:'#1c1c1e',
+    flexDirection:'row',
+    alignItems:'center',
+    justifyContent:'space-between',
+    padding:12
+  },
+  logoContainer:{ flexDirection:'row', alignItems:'center' },
+  logo:         { width:120, height:40 },
+  appName:      { color:'#6A0DAD', fontSize:20, fontWeight:'bold', marginLeft: 4 },
 
-  cardContainer: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  card: { width: width * 0.9, height: height * 0.7, borderRadius: 16, overflow: 'hidden', backgroundColor: '#1c1c1e' },
-  bottomOverlay: { position: 'absolute', left: 0, right: 0, bottom: 0, height: 120, backgroundColor: 'rgba(0,0,0,0.6)' },
-  badge: { position: 'absolute', top: 16, left: 16, backgroundColor: 'rgba(0,0,0,0.5)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 4, zIndex: 2 },
-  badgeText: { color: '#fff', fontSize: 12 },
-  cardFooter: { position: 'absolute', bottom: 24, left: 16, right: 16, zIndex: 2 },
-  cardTitle: { fontSize: 28, color: '#fff', fontWeight: 'bold' },
-  cardSubtitle: { fontSize: 18, color: '#fff', marginTop: 4 },
-  cardDistance: { fontSize: 14, color: '#fff', marginTop: 2 },
+  headerIcons:  { flexDirection:'row', paddingRight:12 },
 
-  buttons: { flexDirection: 'row', justifyContent: 'space-evenly', marginBottom: 32 },
+  cardContainer:{ flex:1, alignItems:'center', justifyContent:'center' },
+  card:         {
+    width:width*0.9,
+    height:height*0.7,
+    borderRadius:16,
+    overflow:'hidden',
+    backgroundColor:'#1c1c1e'
+  },
+  bottomOverlay:{
+    position:'absolute', left:0, right:0, bottom:0,
+    height:120, backgroundColor:'rgba(0,0,0,0.6)'
+  },
+  badge:{ position:'absolute', top:16,left:16,
+    backgroundColor:'rgba(0,0,0,0.5)',
+    paddingHorizontal:8,paddingVertical:4,
+    borderRadius:4,zIndex:2
+  },
+  badgeText:{ color:'#fff', fontSize:12 },
+
+  cardFooter:{
+    position:'absolute', bottom:24,left:16,right:16,zIndex:2
+  },
+  cardTitle:   { fontSize:28, color:'#fff', fontWeight:'bold' },
+  cardSubtitle:{ fontSize:18, color:'#fff', marginTop:4 },
+  cardDistance:{ fontSize:14, color:'#fff', marginTop:2 },
+
+  buttons:{ flexDirection:'row', justifyContent:'space-evenly', marginBottom:32 }
 });

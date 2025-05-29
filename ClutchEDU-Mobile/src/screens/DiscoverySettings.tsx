@@ -35,8 +35,12 @@ export default function DiscoverySettings({
     }
   }, [visible, initialRegion, initialState]);
 
-  const regions      = Object.keys(regionMapping);
-  const statesForReg = region ? regionMapping[region] : [];
+  const regions = Object.keys(regionMapping);
+
+  // only keep the 2-letter codes:
+  const statesAbbr = region
+    ? regionMapping[region].filter(s => s.length === 2)
+    : [];
 
   return (
     <Modal
@@ -47,7 +51,7 @@ export default function DiscoverySettings({
     >
       <View style={styles.backdrop}>
         <View style={styles.modal}>
-          {/* Header */}
+          {/* header */}
           <View style={styles.header}>
             <TouchableOpacity onPress={onClose}>
               <Text style={styles.close}>Close</Text>
@@ -58,9 +62,9 @@ export default function DiscoverySettings({
             </TouchableOpacity>
           </View>
 
-          {/* Body */}
+          {/* body */}
           <ScrollView contentContainerStyle={styles.body}>
-            {/* Region */}
+            {/* Region picker */}
             <Text style={styles.label}>Search by Region</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
               {regions.map(r => (
@@ -84,26 +88,26 @@ export default function DiscoverySettings({
               ))}
             </ScrollView>
 
-            {/* State */}
+            {/* State picker (abbreviations only) */}
             {region && (
               <>
                 <Text style={[styles.label, { marginTop: 20 }]}>
                   Search by State
                 </Text>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                  {statesForReg.map(s => (
+                  {statesAbbr.map(abbr => (
                     <TouchableOpacity
-                      key={s}
-                      style={[styles.pill, state === s && styles.pillSelected]}
-                      onPress={() => setState(s)}
+                      key={abbr}
+                      style={[styles.pill, state === abbr && styles.pillSelected]}
+                      onPress={() => setState(abbr)}
                     >
                       <Text
                         style={[
                           styles.pillText,
-                          state === s && styles.pillTextSelected
+                          state === abbr && styles.pillTextSelected
                         ]}
                       >
-                        {s}
+                        {abbr}
                       </Text>
                     </TouchableOpacity>
                   ))}
