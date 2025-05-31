@@ -29,6 +29,7 @@ export default function DiscoverySettings({
   const [state, setState]   = useState<string | null>(initialState);
 
   useEffect(() => {
+    // Whenever the modal opens, reset the selected pills
     if (visible) {
       setRegion(initialRegion);
       setState(initialState);
@@ -37,9 +38,9 @@ export default function DiscoverySettings({
 
   const regions = Object.keys(regionMapping);
 
-  // only keep the 2-letter codes:
+  // Show only 2‐letter codes for states in that region
   const statesAbbr = region
-    ? regionMapping[region].filter(s => s.length === 2)
+    ? regionMapping[region].filter((s) => s.length === 2)
     : [];
 
   return (
@@ -67,7 +68,7 @@ export default function DiscoverySettings({
             {/* Region picker */}
             <Text style={styles.label}>Search by Region</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              {regions.map(r => (
+              {regions.map((r) => (
                 <TouchableOpacity
                   key={r}
                   style={[styles.pill, region === r && styles.pillSelected]}
@@ -95,7 +96,7 @@ export default function DiscoverySettings({
                   Search by State
                 </Text>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                  {statesAbbr.map(abbr => (
+                  {statesAbbr.map((abbr) => (
                     <TouchableOpacity
                       key={abbr}
                       style={[styles.pill, state === abbr && styles.pillSelected]}
