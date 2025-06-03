@@ -1,6 +1,6 @@
+// src/screens/ChatScreen.tsx
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import axios from 'axios';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   Button,
   FlatList,
@@ -24,38 +24,27 @@ export default function ChatScreen({ route }: Props) {
   const [text, setText] = useState('');
   const flatRef = useRef<FlatList>(null);
 
-  useEffect(() => {
-    fetch();
-    const iv = setInterval(fetch, 5000);
-    return () => clearInterval(iv);
-
-    function fetch() {
-      axios
-        .get<Message[]>('https://www.esportsfinderusa.com/api/messages.php', {
-          params: { match_id: matchId }
-        })
-        .then((res) => setMessages(res.data))
-        .catch(() => {});
-    }
-  }, []);
-
   function send() {
     if (!text.trim()) return;
-    axios
-      .post(
-        'https://www.esportsfinderusa.com/api/messages.php',
-        { match_id: matchId, from_user: true, text },
-        { headers: { 'Content-Type': 'application/json' } }
-      )
-      .then(() => {
-        setText('');
-        flatRef.current?.scrollToEnd({ animated: true });
-      });
+
+    const newMessage: Message = {
+      id: Date.now(), // unique enough for local demo
+      from_user: true,
+      text,
+      created_at: new Date().toISOString()
+    };
+
+    setMessages(prev => [...prev, newMessage]);
+    setText('');
+
+    setTimeout(() => {
+      flatRef.current?.scrollToEnd({ animated: true });
+    }, 50);
   }
 
   return (
     <View style={styles.container}>
-      {/* Header com logo + nome */}
+      {/* HEADER */}
       <SafeAreaView style={styles.header}>
         <View style={styles.logoContainer}>
           <Image
@@ -67,7 +56,7 @@ export default function ChatScreen({ route }: Props) {
         </View>
       </SafeAreaView>
 
-      {/* Lista de mensagens */}
+      {/* CHAT BODY */}
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -92,7 +81,7 @@ export default function ChatScreen({ route }: Props) {
           contentContainerStyle={styles.list}
         />
 
-        {/* Campo de input */}
+        {/* INPUT */}
         <View style={styles.inputRow}>
           <TextInput
             style={styles.input}
