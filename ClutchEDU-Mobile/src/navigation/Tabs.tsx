@@ -6,6 +6,7 @@ import React from 'react';
 import ChatScreen from '../screens/ChatScreen';
 import MatchesScreen from '../screens/MatchesScreen';
 import SwipeScreen from '../screens/SwipeScreen';
+import ProfileScreen from '../screens/ProfileScreen';
 import { RootStackParamList } from './Stacks'; // ajuste o caminho se necessário
 
 const Tab = createBottomTabNavigator<RootStackParamList>();
