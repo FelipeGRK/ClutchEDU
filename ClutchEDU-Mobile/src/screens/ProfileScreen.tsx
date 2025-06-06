@@ -1,121 +1,68 @@
+// src/screens/ProfileScreen.tsx
 import React from 'react';
-import { View, Text, Image, StyleSheet, ScrollView, SafeAreaView, TouchableOpacity } from 'react-native';
+import { SafeAreaView, StyleSheet, Text, View, Image } from 'react-native';
 
-export default function UserProfileScreen() {
+export default function ProfileScreen() {
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scroll}>
-        {/* Banner */}
+      <View style={styles.header}>
         <Image
-          source={{ uri: 'https://i.imgur.com/Vh6rX0w.jpeg' }} // Replace with actual banner or highlight video preview
-          style={styles.banner}
+          source={require('../../assets/images/logo.png')}
+          style={styles.logo}
+          resizeMode="contain"
         />
+        <Text style={styles.appName}>ClutchEDU</Text>
+      </View>
 
-        {/* Profile Info */}
-        <View style={styles.profileBox}>
-          <Image
-            source={{ uri: 'https://i.imgur.com/2nCt3Sbl.jpg' }} // Replace with user avatar
-            style={styles.avatar}
-          />
-          <Text style={styles.username}>Felipe "GRK" Siqueira</Text>
-          <Text style={styles.rank}>Immortal 2 - Valorant</Text>
-        </View>
-
-        {/* Esports Stats */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Esports Overview</Text>
-          <View style={styles.statsRow}>
-            <StatBox label="Games" value="250+" />
-            <StatBox label="Wins" value="170" />
-            <StatBox label="K/D" value="1.42" />
-          </View>
-        </View>
-
-        {/* Favorite Titles */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Main Games</Text>
-          <View style={styles.gamesRow}>
-            <GameBadge title="Valorant" />
-            <GameBadge title="CS2" />
-            <GameBadge title="Overwatch 2" />
-          </View>
-        </View>
-
-        {/* Video Clip Preview */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Top Clip</Text>
-          <Image
-            source={{ uri: 'https://i.imgur.com/JtT2f2P.png' }} // Replace with clip thumbnail
-            style={styles.clipPreview}
-          />
-          <TouchableOpacity style={styles.button}>
-            <Text style={styles.buttonText}>Watch Highlight</Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
+      <View style={styles.profile}>
+        <Image
+          source={{ uri: 'https://via.placeholder.com/120' }}
+          style={styles.avatar}
+        />
+        <Text style={styles.username}>@Gamer123</Text>
+        <Text style={styles.rank}>Rank: Immortal</Text>
+        <Text style={styles.games}>Games Played: 218</Text>
+        <Text style={styles.role}>Main Game: Valorant</Text>
+        <Text style={styles.bio}>🎮 Passionate about collegiate esports and competitive gaming.</Text>
+      </View>
     </SafeAreaView>
-  );
-}
-
-function StatBox({ label, value }: { label: string; value: string }) {
-  return (
-    <View style={styles.statBox}>
-      <Text style={styles.statValue}>{value}</Text>
-      <Text style={styles.statLabel}>{label}</Text>
-    </View>
-  );
-}
-
-function GameBadge({ title }: { title: string }) {
-  return (
-    <View style={styles.badge}>
-      <Text style={styles.badgeText}>{title}</Text>
-    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#000' },
-  scroll: { paddingBottom: 40 },
-  banner: { width: '100%', height: 180 },
-  profileBox: {
-    alignItems: 'center',
-    marginTop: -40,
+  header: {
     backgroundColor: '#1c1c1e',
-    padding: 16,
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
   },
-  avatar: { width: 80, height: 80, borderRadius: 40, marginBottom: 8 },
-  username: { color: '#fff', fontSize: 20, fontWeight: 'bold' },
-  rank: { color: '#aaa', fontSize: 14 },
+  logo: { width: 120, height: 40 },
+  appName: { color: '#6A0DAD', fontSize: 20, fontWeight: 'bold', marginLeft: 6 },
 
-  section: { paddingHorizontal: 16, paddingTop: 24 },
-  sectionTitle: { color: '#fff', fontSize: 18, fontWeight: '600', marginBottom: 12 },
-
-  statsRow: { flexDirection: 'row', justifyContent: 'space-between' },
-  statBox: { alignItems: 'center', flex: 1 },
-  statValue: { color: '#fff', fontSize: 22, fontWeight: 'bold' },
-  statLabel: { color: '#888', fontSize: 13, marginTop: 4 },
-
-  gamesRow: { flexDirection: 'row', gap: 8 },
-  badge: {
-    backgroundColor: '#6A0DAD',
-    borderRadius: 16,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    marginRight: 8
+  profile: {
+    alignItems: 'center',
+    padding: 20,
   },
-  badgeText: { color: '#fff', fontWeight: 'bold' },
-
-  clipPreview: { width: '100%', height: 160, borderRadius: 8, marginTop: 8 },
-  button: {
-    backgroundColor: '#6A0DAD',
-    marginTop: 12,
-    alignSelf: 'center',
-    paddingVertical: 10,
-    paddingHorizontal: 24,
-    borderRadius: 20
+  avatar: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    marginBottom: 12,
   },
-  buttonText: { color: '#fff', fontWeight: 'bold' }
+  username: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginBottom: 8,
+  },
+  rank: { color: '#aaa', marginBottom: 4 },
+  games: { color: '#aaa', marginBottom: 4 },
+  role: { color: '#aaa', marginBottom: 10 },
+  bio: {
+    fontSize: 14,
+    color: '#ccc',
+    textAlign: 'center',
+    paddingHorizontal: 30,
+  },
 });

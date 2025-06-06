@@ -17,7 +17,7 @@ export default function TabNavigator() {
       initialRouteName="Swipe"
       screenOptions={({ route }) => ({
         headerStyle: {
-          backgroundColor: '#6A0DAD',
+          backgroundColor: '#1c1c1e',
         },
         headerTintColor: '#fff',
         tabBarActiveTintColor: '#6A0DAD',
@@ -25,28 +25,44 @@ export default function TabNavigator() {
         tabBarStyle: { backgroundColor: '#fff' },
         tabBarIcon: ({ color, size }) => {
           let iconName: React.ComponentProps<typeof Ionicons>['name'];
-          if (route.name === 'Swipe') iconName = 'heart-outline';
-          else if (route.name === 'Matches') iconName = 'chatbubble-ellipses-outline';
-          else iconName = 'person-outline';
+
+          switch (route.name) {
+            case 'Swipe':
+              iconName = 'heart-outline';
+              break;
+            case 'Matches':
+              iconName = 'game-controller-outline'; // more esports-focused
+              break;
+            case 'Profile':
+              iconName = 'person-circle-outline';
+              break;
+            case 'Chat':
+              iconName = 'chatbox-ellipses-outline';
+              break;
+            default:
+              iconName = 'apps-outline';
+          }
+
           return <Ionicons name={iconName} size={size} color={color} />;
         },
       })}
     >
-      {/* Swipe recebe params, então definimos valores iniciais */}
       <Tab.Screen
         name="Swipe"
         component={SwipeScreen}
         options={{ title: '' }}
         initialParams={{ radiusKm: 10, course: '', scholarship: false }}
       />
-
       <Tab.Screen
         name="Matches"
         component={MatchesScreen}
         options={{ title: '' }}
       />
-
-      {/* Chat também recebe params, então damos initialParams vazios */}
+      <Tab.Screen
+        name="Profile"
+        component={ProfileScreen}
+        options={{ title: '' }}
+      />
       <Tab.Screen
         name="Chat"
         component={ChatScreen}

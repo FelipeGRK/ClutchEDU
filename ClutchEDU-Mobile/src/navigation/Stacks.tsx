@@ -4,7 +4,7 @@ import React from 'react';
 import ChatScreen from '../screens/ChatScreen';
 import MatchesScreen from '../screens/MatchesScreen';
 import SwipeScreen from '../screens/SwipeScreen';
-
+import ProfileScreen from '../screens/ProfileScreen';
 export type RootStackParamList = {
   Swipe: {
     radiusKm: number;
@@ -16,6 +16,7 @@ export type RootStackParamList = {
     matchId: number;
     collegeName: string;
   };
+  Profile: undefined; // ✅ Add this
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
