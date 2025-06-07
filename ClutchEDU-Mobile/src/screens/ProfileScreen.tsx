@@ -6,6 +6,7 @@ import {
   StyleSheet,
   Image,
   SafeAreaView,
+  ScrollView,
 } from 'react-native';
 
 export default function ProfileScreen() {
@@ -23,8 +24,7 @@ export default function ProfileScreen() {
         </View>
       </SafeAreaView>
 
-      {/* PROFILE SECTION (NO BACKGROUND WRAPPER) */}
-      <View style={styles.profileArea}>
+      <ScrollView contentContainerStyle={styles.profileArea}>
         <View style={styles.card}>
           {/* AVATAR */}
           <Image
@@ -36,16 +36,40 @@ export default function ProfileScreen() {
           <Text style={styles.username}>@Gamer123</Text>
 
           {/* DETAILS */}
-          <Text style={styles.detail}>🎖️ Rank: <Text style={styles.highlight}>Immortal</Text></Text>
+          <Text style={styles.detail}>🥇 Rank: <Text style={styles.highlight}>Immortal</Text></Text>
           <Text style={styles.detail}>🎮 Games Played: <Text style={styles.highlight}>218</Text></Text>
           <Text style={styles.detail}>🕹️ Main Game: <Text style={styles.highlight}>Valorant</Text></Text>
+          <Text style={styles.detail}>🎯 Secondary Game: <Text style={styles.highlight}>CS:GO</Text></Text>
 
           {/* BIO */}
           <Text style={styles.bio}>
             🎧 Passionate about collegiate esports and competitive gaming.
           </Text>
+
+          {/* HOBBIES */}
+          <Text style={styles.sectionTitle}>🎮 Hobbies</Text>
+          <Text style={styles.sectionText}>
+            - Streaming on Twitch{"\n"}
+            - Practicing aim routines{"\n"}
+            - Coaching lower-rank players{"\n"}
+            - Watching pro Valorant tournaments
+          </Text>
+
+          {/* HIGHLIGHT VIDEO (Placeholder) */}
+          <Text style={styles.sectionTitle}>🎬 Highlight Video</Text>
+          <View style={styles.videoBox}>
+            <Text style={styles.videoText}>[ Video clip or embedded YouTube/Twitch highlight ]</Text>
+          </View>
+
+          {/* ABOUT ME */}
+          <Text style={styles.sectionTitle}>🧠 About Me</Text>
+          <Text style={styles.sectionText}>
+            I'm a competitive esports player aiming to get recruited by a top collegiate program.
+            I focus on teamwork, game sense, and leadership. Looking for a school with strong
+            esports infrastructure and scholarships!
+          </Text>
         </View>
-      </View>
+      </ScrollView>
     </View>
   );
 }
@@ -76,16 +100,14 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   profileArea: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
     padding: 24,
+    alignItems: 'center',
   },
   card: {
     backgroundColor: '#111',
     borderRadius: 16,
     padding: 24,
-    width: '90%',
+    width: '100%',
     alignItems: 'center',
     shadowColor: '#6A0DAD',
     shadowOpacity: 0.4,
@@ -121,5 +143,33 @@ const styles = StyleSheet.create({
     marginTop: 16,
     textAlign: 'center',
     lineHeight: 20,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#6A0DAD',
+    marginTop: 24,
+    marginBottom: 8,
+    alignSelf: 'flex-start',
+  },
+  sectionText: {
+    fontSize: 14,
+    color: '#ddd',
+    lineHeight: 20,
+    alignSelf: 'flex-start',
+  },
+  videoBox: {
+    height: 180,
+    width: '100%',
+    backgroundColor: '#222',
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  videoText: {
+    color: '#777',
+    fontStyle: 'italic',
+    fontSize: 12,
   },
 });
