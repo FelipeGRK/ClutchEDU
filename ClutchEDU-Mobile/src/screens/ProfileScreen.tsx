@@ -12,7 +12,6 @@ import {
 export default function ProfileScreen() {
   return (
     <View style={styles.container}>
-      {/* HEADER */}
       <SafeAreaView style={styles.header}>
         <View style={styles.logoContainer}>
           <Image
@@ -26,27 +25,23 @@ export default function ProfileScreen() {
 
       <ScrollView contentContainerStyle={styles.profileArea}>
         <View style={styles.card}>
-          {/* AVATAR */}
           <Image
             source={require('../../assets/images/felipeprofile.png')}
             style={styles.avatar}
           />
 
-          {/* USERNAME */}
           <Text style={styles.username}>@Gamer123</Text>
 
-          {/* DETAILS */}
           <Text style={styles.detail}>🥇 Rank: <Text style={styles.highlight}>Immortal</Text></Text>
           <Text style={styles.detail}>🎮 Games Played: <Text style={styles.highlight}>218</Text></Text>
           <Text style={styles.detail}>🕹️ Main Game: <Text style={styles.highlight}>Valorant</Text></Text>
           <Text style={styles.detail}>🎯 Secondary Game: <Text style={styles.highlight}>CS:GO</Text></Text>
+          <Text style={styles.detail}>🎯 In-Game Role: <Text style={styles.highlight}>Entry Fragger</Text></Text>
 
-          {/* BIO */}
           <Text style={styles.bio}>
             🎧 Passionate about collegiate esports and competitive gaming.
           </Text>
 
-          {/* HOBBIES */}
           <Text style={styles.sectionTitle}>🎮 Hobbies</Text>
           <Text style={styles.sectionText}>
             - Streaming on Twitch{"\n"}
@@ -55,13 +50,11 @@ export default function ProfileScreen() {
             - Watching pro Valorant tournaments
           </Text>
 
-          {/* HIGHLIGHT VIDEO (Placeholder) */}
           <Text style={styles.sectionTitle}>🎬 Highlight Video</Text>
           <View style={styles.videoBox}>
             <Text style={styles.videoText}>[ Video clip or embedded YouTube/Twitch highlight ]</Text>
           </View>
 
-          {/* ABOUT ME */}
           <Text style={styles.sectionTitle}>🧠 About Me</Text>
           <Text style={styles.sectionText}>
             I'm a competitive esports player aiming to get recruited by a top collegiate program.
@@ -75,30 +68,17 @@ export default function ProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#000',
-  },
+  container: { flex: 1, backgroundColor: '#000' },
   header: {
     backgroundColor: '#1c1c1e',
     flexDirection: 'row',
     alignItems: 'center',
     padding: 12,
   },
-  logoContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  logo: {
-    width: 32,
-    height: 32,
-    marginRight: 8,
-  },
-  appName: {
-    color: '#6A0DAD',
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
+  logoContainer: { flexDirection: 'row', alignItems: 'center' },
+  logo: { width: 32, height: 32, marginRight: 8 },
+  appName: { color: '#6A0DAD', fontSize: 20, fontWeight: 'bold' },
+
   profileArea: {
     padding: 24,
     alignItems: 'center',
