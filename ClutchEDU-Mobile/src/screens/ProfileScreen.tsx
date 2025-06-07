@@ -1,68 +1,125 @@
 // src/screens/ProfileScreen.tsx
 import React from 'react';
-import { SafeAreaView, StyleSheet, Text, View, Image } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Image,
+  SafeAreaView,
+} from 'react-native';
 
 export default function ProfileScreen() {
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Image
-          source={require('../../assets/images/logo.png')}
-          style={styles.logo}
-          resizeMode="contain"
-        />
-        <Text style={styles.appName}>ClutchEDU</Text>
-      </View>
+    <View style={styles.container}>
+      {/* HEADER */}
+      <SafeAreaView style={styles.header}>
+        <View style={styles.logoContainer}>
+          <Image
+            source={require('../../assets/images/logo.png')}
+            style={styles.logo}
+            resizeMode="contain"
+          />
+          <Text style={styles.appName}>ClutchEDU</Text>
+        </View>
+      </SafeAreaView>
 
-      <View style={styles.profile}>
-        <Image
-          source={{ uri: 'https://via.placeholder.com/120' }}
-          style={styles.avatar}
-        />
-        <Text style={styles.username}>@Gamer123</Text>
-        <Text style={styles.rank}>Rank: Immortal</Text>
-        <Text style={styles.games}>Games Played: 218</Text>
-        <Text style={styles.role}>Main Game: Valorant</Text>
-        <Text style={styles.bio}>🎮 Passionate about collegiate esports and competitive gaming.</Text>
+      {/* PROFILE SECTION (NO BACKGROUND WRAPPER) */}
+      <View style={styles.profileArea}>
+        <View style={styles.card}>
+          {/* AVATAR */}
+          <Image
+            source={require('../../assets/images/felipeprofile.png')}
+            style={styles.avatar}
+          />
+
+          {/* USERNAME */}
+          <Text style={styles.username}>@Gamer123</Text>
+
+          {/* DETAILS */}
+          <Text style={styles.detail}>🎖️ Rank: <Text style={styles.highlight}>Immortal</Text></Text>
+          <Text style={styles.detail}>🎮 Games Played: <Text style={styles.highlight}>218</Text></Text>
+          <Text style={styles.detail}>🕹️ Main Game: <Text style={styles.highlight}>Valorant</Text></Text>
+
+          {/* BIO */}
+          <Text style={styles.bio}>
+            🎧 Passionate about collegiate esports and competitive gaming.
+          </Text>
+        </View>
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#000' },
+  container: {
+    flex: 1,
+    backgroundColor: '#000',
+  },
   header: {
     backgroundColor: '#1c1c1e',
     flexDirection: 'row',
     alignItems: 'center',
     padding: 12,
   },
-  logo: { width: 120, height: 40 },
-  appName: { color: '#6A0DAD', fontSize: 20, fontWeight: 'bold', marginLeft: 6 },
-
-  profile: {
+  logoContainer: {
+    flexDirection: 'row',
     alignItems: 'center',
-    padding: 20,
+  },
+  logo: {
+    width: 32,
+    height: 32,
+    marginRight: 8,
+  },
+  appName: {
+    color: '#6A0DAD',
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  profileArea: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 24,
+  },
+  card: {
+    backgroundColor: '#111',
+    borderRadius: 16,
+    padding: 24,
+    width: '90%',
+    alignItems: 'center',
+    shadowColor: '#6A0DAD',
+    shadowOpacity: 0.4,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
   },
   avatar: {
     width: 120,
     height: 120,
     borderRadius: 60,
-    marginBottom: 12,
+    borderWidth: 3,
+    borderColor: '#6A0DAD',
+    marginBottom: 16,
   },
   username: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: 'bold',
     color: '#fff',
-    marginBottom: 8,
+    marginBottom: 12,
   },
-  rank: { color: '#aaa', marginBottom: 4 },
-  games: { color: '#aaa', marginBottom: 4 },
-  role: { color: '#aaa', marginBottom: 10 },
+  detail: {
+    fontSize: 16,
+    color: '#aaa',
+    marginVertical: 2,
+  },
+  highlight: {
+    color: '#fff',
+    fontWeight: '600',
+  },
   bio: {
     fontSize: 14,
     color: '#ccc',
+    marginTop: 16,
     textAlign: 'center',
-    paddingHorizontal: 30,
+    lineHeight: 20,
   },
 });
