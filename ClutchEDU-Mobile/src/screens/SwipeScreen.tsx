@@ -11,6 +11,7 @@ import {
   Animated,
   Dimensions,
   ImageBackground,
+  LogBox,
   PanResponder,
   SafeAreaView,
   StyleSheet,
@@ -27,6 +28,9 @@ import { locationMatchesState, regionMapping } from '../utils/regions';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Swipe'>;
 const { width, height } = Dimensions.get('window');
+
+// suppress that pointerEvents deprecation warning on web:
+LogBox.ignoreLogs(['props.pointerEvents is deprecated']);
 
 interface CollegeCard {
   id: number;
@@ -69,17 +73,39 @@ export default function SwipeScreen({ route, navigation }: Props) {
 
   useEffect(() => {
     (async () => {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert('Permissão de localização negada');
-        setLoading(false);
-        return;
+      // default fallback coords & radius
+      let coords = { latitude: 0, longitude: 0 };
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status === 'granted') {
+          const { coords: c } = await Location.getCurrentPositionAsync();
+          coords = c;
+        } else {
+          console.warn('Location permission denied — showing all colleges.');
+        }
+      } catch (err) {
+        console.warn('Error obtaining location, showing all colleges.', err);
       }
-      const { coords } = await Location.getCurrentPositionAsync();
+
       setUserCoords(coords);
-      loadCards(coords.latitude, coords.longitude, filterRadius, false, filterRegion, filterState);
+
+      // if fallback coords used, show everything
+      const rad = coords.latitude === 0 && coords.longitude === 0
+        ? 99999
+        : filterRadius;
+
+      loadCards(
+        coords.latitude,
+        coords.longitude,
+        rad,
+        false,
+        filterRegion,
+        filterState
+      );
+
       setLoading(false);
     })();
+    // we only want to run this once
   }, []);
 
   function loadCards(
@@ -101,15 +127,22 @@ export default function SwipeScreen({ route, navigation }: Props) {
     let filtered: CollegeCard[] = mapped;
 
     if (state) {
+      // filter strictly by state
       filtered = filtered.filter(c => locationMatchesState(c.state, state));
     } else if (region) {
+      // filter by region
       const allowed = regionMapping[region];
-      filtered = filtered.filter(c => allowed.some(st => locationMatchesState(c.state, st)));
+      filtered = filtered.filter(c =>
+        allowed.some(st => locationMatchesState(c.state, st))
+      );
     } else {
+      // filter by distance
       filtered = filtered.filter(c => c.distance <= radius);
     }
 
+    // always sort by distance
     filtered.sort((a, b) => a.distance - b.distance);
+
     setCards(filtered);
     setIndex(0);
     setExtended(isExtended);
@@ -124,9 +157,17 @@ export default function SwipeScreen({ route, navigation }: Props) {
     }).start(() => {
       position.setValue({ x: 0, y: 0 });
       const nxt = index + 1;
+
       if (nxt >= cards.length) {
         if (!extended && userCoords) {
-          loadCards(userCoords.latitude, userCoords.longitude, 99999, true, filterRegion, filterState);
+          loadCards(
+            userCoords.latitude,
+            userCoords.longitude,
+            99999,
+            true,
+            filterRegion,
+            filterState
+          );
         } else {
           navigation.replace('Matches');
           return;
@@ -149,7 +190,7 @@ export default function SwipeScreen({ route, navigation }: Props) {
   if (!card) {
     return (
       <View style={styles.loader}>
-        <Text style={styles.emptyText}>Nenhuma faculdade restante.</Text>
+        <Text style={styles.emptyText}>No colleges remaining.</Text>
       </View>
     );
   }
@@ -159,6 +200,7 @@ export default function SwipeScreen({ route, navigation }: Props) {
 
   return (
     <View style={styles.container}>
+      {/* HEADER */}
       <SafeAreaView style={styles.header}>
         <View style={styles.logoContainer}>
           <ImageBackground
@@ -178,8 +220,12 @@ export default function SwipeScreen({ route, navigation }: Props) {
         </View>
       </SafeAreaView>
 
+      {/* CARD SWIPE AREA */}
       <View style={styles.cardContainer}>
-        <Animated.View {...panResponder.panHandlers} style={[position.getLayout(), styles.card]}>
+        <Animated.View
+          {...panResponder.panHandlers}
+          style={[position.getLayout(), styles.card]}
+        >
           <ImageBackground source={logoSource} style={styles.card}>
             <View style={styles.bottomOverlay} />
             <View style={styles.badge}>
@@ -187,13 +233,18 @@ export default function SwipeScreen({ route, navigation }: Props) {
             </View>
             <View style={styles.cardFooter}>
               <Text style={styles.cardTitle}>{card.name}</Text>
-              <Text style={styles.cardSubtitle}>{card.city}, {card.state}</Text>
-              <Text style={styles.cardDistance}>{Math.round(card.distance)} km away</Text>
+              <Text style={styles.cardSubtitle}>
+                {card.city}, {card.state}
+              </Text>
+              <Text style={styles.cardDistance}>
+                {Math.round(card.distance)} km away
+              </Text>
             </View>
           </ImageBackground>
         </Animated.View>
       </View>
 
+      {/* ACTION BUTTONS */}
       <View style={styles.buttons}>
         <TouchableOpacity onPress={() => swipe('left')}>
           <Ionicons name="close-circle" size={48} color="#F06A6A" />
@@ -203,6 +254,7 @@ export default function SwipeScreen({ route, navigation }: Props) {
         </TouchableOpacity>
       </View>
 
+      {/* DISCOVERY SETTINGS */}
       <DiscoverySettingsModal
         visible={showFilter}
         initialRegion={filterRegion}
@@ -211,7 +263,14 @@ export default function SwipeScreen({ route, navigation }: Props) {
           setFilterRegion(region);
           setFilterState(state);
           if (userCoords) {
-            loadCards(userCoords.latitude, userCoords.longitude, filterRadius, false, region, state);
+            loadCards(
+              userCoords.latitude,
+              userCoords.longitude,
+              filterRadius,
+              false,
+              region,
+              state
+            );
           }
           setShowFilter(false);
         }}

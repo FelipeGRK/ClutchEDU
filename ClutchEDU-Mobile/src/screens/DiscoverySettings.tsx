@@ -29,7 +29,6 @@ export default function DiscoverySettings({
   const [state, setState]   = useState<string | null>(initialState);
 
   useEffect(() => {
-    // Whenever the modal opens, reset the selected pills
     if (visible) {
       setRegion(initialRegion);
       setState(initialState);
@@ -37,10 +36,8 @@ export default function DiscoverySettings({
   }, [visible, initialRegion, initialState]);
 
   const regions = Object.keys(regionMapping);
-
-  // Show only 2‐letter codes for states in that region
   const statesAbbr = region
-    ? regionMapping[region].filter((s) => s.length === 2)
+    ? regionMapping[region].filter(s => s.length === 2)
     : [];
 
   return (
@@ -67,8 +64,8 @@ export default function DiscoverySettings({
           <ScrollView contentContainerStyle={styles.body}>
             {/* Region picker */}
             <Text style={styles.label}>Search by Region</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              {regions.map((r) => (
+            <View style={styles.pillRow}>
+              {regions.map(r => (
                 <TouchableOpacity
                   key={r}
                   style={[styles.pill, region === r && styles.pillSelected]}
@@ -87,16 +84,16 @@ export default function DiscoverySettings({
                   </Text>
                 </TouchableOpacity>
               ))}
-            </ScrollView>
+            </View>
 
-            {/* State picker (abbreviations only) */}
+            {/* State picker */}
             {region && (
               <>
                 <Text style={[styles.label, { marginTop: 20 }]}>
                   Search by State
                 </Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                  {statesAbbr.map((abbr) => (
+                <View style={styles.pillRow}>
+                  {statesAbbr.map(abbr => (
                     <TouchableOpacity
                       key={abbr}
                       style={[styles.pill, state === abbr && styles.pillSelected]}
@@ -112,7 +109,7 @@ export default function DiscoverySettings({
                       </Text>
                     </TouchableOpacity>
                   ))}
-                </ScrollView>
+                </View>
               </>
             )}
           </ScrollView>
@@ -149,12 +146,16 @@ const styles = StyleSheet.create({
   body: { padding: 16 },
   label: { color: '#ccc', fontSize: 14, marginBottom: 8 },
 
+  pillRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
   pill: {
     paddingHorizontal: 12,
     paddingVertical: 6,
     backgroundColor: '#333',
     borderRadius: 20,
-    marginRight: 8,
+    margin: 4,
   },
   pillSelected: {
     backgroundColor: '#6A0DAD',

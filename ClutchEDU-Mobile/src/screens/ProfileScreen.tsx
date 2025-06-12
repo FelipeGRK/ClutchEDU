@@ -1,3 +1,4 @@
+// src/screens/ProfileScreen.tsx
 import React from 'react';
 import {
   View,
@@ -5,6 +6,7 @@ import {
   StyleSheet,
   Image,
   SafeAreaView,
+  ScrollView,
 } from 'react-native';
 
 export default function ProfileScreen() {
@@ -22,8 +24,7 @@ export default function ProfileScreen() {
         </View>
       </SafeAreaView>
 
-      {/* PROFILE CARD */}
-      <View style={styles.profileArea}>
+      <ScrollView contentContainerStyle={styles.profileArea}>
         <View style={styles.card}>
           {/* AVATAR */}
           <Image
@@ -42,7 +43,9 @@ export default function ProfileScreen() {
           <Text style={styles.detail}>🎯 In-Game Role: <Text style={styles.highlight}>Entry Fragger</Text></Text>
 
           {/* ABOUT */}
-          <Text style={styles.bio}>🎧 Passionate about collegiate esports and competitive gaming.</Text>
+          <Text style={styles.bio}>
+            🎧 Passionate about collegiate esports and competitive gaming.
+          </Text>
 
           {/* TRACKER.GG */}
           <Text style={styles.sectionTitle}>📊 Stats Tracker</Text>
@@ -62,7 +65,7 @@ export default function ProfileScreen() {
           <Text style={styles.sectionTitle}>📍 Location</Text>
           <Text style={styles.sectionText}>Boston, MA | Languages: English, Portuguese</Text>
         </View>
-      </View>
+      </ScrollView>
     </View>
   );
 }
@@ -93,10 +96,8 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   profileArea: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
     padding: 24,
+    alignItems: 'center',
   },
   card: {
     backgroundColor: '#111',
@@ -104,10 +105,8 @@ const styles = StyleSheet.create({
     padding: 24,
     width: '90%',
     alignItems: 'center',
-    shadowColor: '#6A0DAD',
-    shadowOpacity: 0.4,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 4 },
+    // cross-platform drop shadow:
+    boxShadow: '0px 4px 10px rgba(106,13,173,0.4)',
   },
   avatar: {
     width: 120,

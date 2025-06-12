@@ -1,14 +1,15 @@
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
+// src/screens/MatchesScreen.tsx
 import React, { useEffect, useState } from 'react';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import {
-  ActivityIndicator,
-  FlatList,
-  Image,
-  SafeAreaView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
   View,
+  SafeAreaView,
+  Image,
+  Text,
+  FlatList,
+  TouchableOpacity,
+  ActivityIndicator,
+  StyleSheet
 } from 'react-native';
 import collegesData from '../data/colleges.json';
 import { RootStackParamList } from '../navigation/Stacks';
@@ -35,7 +36,6 @@ export default function MatchesScreen({ navigation }: Props) {
       city: c.city as string,
       state: c.state as string,
     }));
-
     setMatches(localMatches);
     setLoading(false);
   }, []);
@@ -43,7 +43,7 @@ export default function MatchesScreen({ navigation }: Props) {
   if (loading) {
     return (
       <View style={styles.loader}>
-        <ActivityIndicator size="large" />
+        <ActivityIndicator size="large" color="#6A0DAD" />
       </View>
     );
   }
@@ -51,14 +51,14 @@ export default function MatchesScreen({ navigation }: Props) {
   if (matches.length === 0) {
     return (
       <View style={styles.loader}>
-        <Text>Você ainda não deu match em nenhuma faculdade.</Text>
+        <Text style={styles.emptyText}>Você ainda não deu match em nenhuma faculdade.</Text>
       </View>
     );
   }
 
   return (
-    <View style={{ flex: 1 }}>
-      {/* HEADER COM LOGO */}
+    <View style={styles.container}>
+      {/* HEADER */}
       <SafeAreaView style={styles.header}>
         <View style={styles.logoContainer}>
           <Image
@@ -85,9 +85,7 @@ export default function MatchesScreen({ navigation }: Props) {
             }
           >
             <Text style={styles.title}>{item.name}</Text>
-            <Text style={styles.subtitle}>
-              {item.city}, {item.state}
-            </Text>
+            <Text style={styles.subtitle}>{item.city}, {item.state}</Text>
           </TouchableOpacity>
         )}
       />
@@ -96,7 +94,9 @@ export default function MatchesScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  loader: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  container: { flex: 1, backgroundColor: '#000' },
+  loader: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#000' },
+  emptyText: { color: '#fff', fontSize: 16 },
 
   header: {
     backgroundColor: '#1c1c1e',
@@ -109,28 +109,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   logo: {
-    width: 120,
-    height: 40,
+    width: 32,
+    height: 32,
+    marginRight: 8,
   },
   appName: {
     color: '#6A0DAD',
     fontSize: 20,
     fontWeight: 'bold',
-    marginLeft: 4,
   },
 
   list: { padding: 20 },
   card: {
-    backgroundColor: '#fff',
+    backgroundColor: '#111',
     padding: 16,
     marginBottom: 12,
     borderRadius: 6,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
+    boxShadow: '0px 2px 5px rgba(106,13,173,0.2)',
   },
-  title: { fontSize: 18, fontWeight: '600' },
-  subtitle: { fontSize: 14, color: '#555', marginTop: 4 },
+  title: { fontSize: 18, fontWeight: '600', color: '#fff' },
+  subtitle: { fontSize: 14, color: '#ccc', marginTop: 4 },
 });
