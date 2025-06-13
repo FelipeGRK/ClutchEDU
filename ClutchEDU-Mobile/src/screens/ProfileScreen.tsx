@@ -64,6 +64,18 @@ export default function ProfileScreen() {
           {/* LOCATION */}
           <Text style={styles.sectionTitle}>📍 Location</Text>
           <Text style={styles.sectionText}>Boston, MA | Languages: English, Portuguese</Text>
+          <Text style={styles.sectionTitle}>🎥 Highlight Reel</Text>
+          <Text style={styles.sectionText}>youtu.be/your_highlight_video</Text>
+
+          <Text style={styles.sectionTitle}>📚 Education</Text>
+          <Text style={styles.sectionText}>Comp Sci, GPA 3.8 — Class of ’26</Text>
+
+          <Text style={styles.sectionTitle}>⚔️ Playstyle</Text>
+          <Text style={styles.sectionText}>• Entry Fragger • Strong Late-Round Calls</Text>
+
+          <Text style={styles.sectionTitle}>⏰ Availability</Text>
+          <Text style={styles.sectionText}>Weeknights after 7 PM EST</Text>
+
         </View>
       </ScrollView>
     </View>
