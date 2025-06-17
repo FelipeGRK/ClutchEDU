@@ -24,7 +24,8 @@ export default function ChatScreen({ route }: Props) {
   const [text, setText] = useState('');
   const flatRef = useRef<FlatList>(null);
 
-  function send() {
+  // Function responsible for sending messages
+  function handleSend() {
     if (!text.trim()) return;
 
     const newMessage: Message = {
@@ -44,7 +45,7 @@ export default function ChatScreen({ route }: Props) {
 
   return (
     <View style={styles.container}>
-      {/* HEADER */}
+      {/* HEADER SECTION */}
       <SafeAreaView style={styles.header}>
         <View style={styles.logoContainer}>
           <Image
@@ -81,7 +82,7 @@ export default function ChatScreen({ route }: Props) {
           contentContainerStyle={styles.list}
         />
 
-        {/* INPUT */}
+        {/* INPUT SECTION */}
         <View style={styles.inputRow}>
           <TextInput
             style={styles.input}
@@ -90,7 +91,7 @@ export default function ChatScreen({ route }: Props) {
             placeholder="Digite aqui..."
             placeholderTextColor="#888"
           />
-          <Button title="Enviar" onPress={send} />
+          <Button title="Enviar" onPress={handleSend} />
         </View>
       </KeyboardAvoidingView>
     </View>
