@@ -1,5 +1,6 @@
 ## 🚀 Live Demo
 Try the app now using Expo Go:
+🔗 https://expo.dev/@felipegrk/ClutchEDU-Mobile
 
 ## 📱 How to Use
 1. Install [Expo Go](https://expo.dev/client) on your Android or iOS device.
