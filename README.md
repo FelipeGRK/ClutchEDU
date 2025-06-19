@@ -1,7 +1,7 @@
 ## 🚀 Live Demo
 Try the app now using Expo Go:
 🔗 https://expo.dev/@felipegrk/ClutchEDU-Mobile
-
+exp+://expo-development-client/?url=https://u.expo.dev/5c6668f8-152c-4ce5-a156-0bb55a9d9641/group/86a8a0f7-cec5-4870-a763-97c9449ebbb4
 ## 📱 How to Use
 1. Install [Expo Go](https://expo.dev/client) on your Android or iOS device.
 2. Open Expo Go and scan the QR code from the link above.
