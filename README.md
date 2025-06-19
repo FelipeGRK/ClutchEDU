@@ -11,4 +11,5 @@ git clone https://github.com/felipegrk/ClutchEDU-Mobile.git
 cd ClutchEDU-Mobile
 npm install
 npm run start
-![image](https://github.com/user-attachments/assets/8e44de92-dcf2-4ab0-9854-95ac2e825c9c)
+
+![Screenshot 2025-06-18 210319](https://github.com/user-attachments/assets/785b7b63-e773-49b1-a54e-31b9331967e0)
