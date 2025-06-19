@@ -301,7 +301,7 @@ const styles = StyleSheet.create({
   cardContainer: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   card: {
     width: width * 0.9,
-    height: height * 0.7,
+    height: height * 0.6,
     borderRadius: 16,
     overflow: 'hidden',
     backgroundColor: '#1c1c1e',
