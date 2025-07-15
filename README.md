@@ -1,6 +1,7 @@
 ## 🚀 Live Demo
 Try the app now using Expo Go:
 🔗 🔗 https://expo.dev/@felipegrk/ClutchEDU-Mobile
+<img width="411" height="344" alt="image" src="https://github.com/user-attachments/assets/9e1b0db0-80d1-4f7b-85db-ef1b9e5f5d67" />
 
 link to access whenever the app is downloaded:
 exp+://expo-development-client/?url=https://u.expo.dev/5c6668f8-152c-4ce5-a156-0bb55a9d9641/group/86a8a0f7-cec5-4870-a763-97c9449ebbb4
